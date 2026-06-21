@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import { Skeleton } from '../components/ui/Skeleton';
-import ProgressBar from '../components/ProgressBar'; // Also reuse
+import ProgressBar from '../components/ProgressBar';
 import { AlertCircle, RefreshCw, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-export default function Quiz({ amount, categoryId, difficulty, onFinished, onQuit }) {
-  const { questions, loading, error, loadQuestions } = useQuiz();
+export default function Quiz({ config, setQuizResult }) {
+  const { questions, loading, error, retry } = useQuiz(config);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
   
-  // Track specific states for animations inside QuestionCard
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadQuestions(amount, categoryId, difficulty);
-  }, [amount, categoryId, difficulty, loadQuestions]);
+    if (!config) {
+      navigate('/');
+    }
+  }, [config, navigate]);
 
-  const handleRetry = () => {
-    loadQuestions(amount, categoryId, difficulty);
-  };
+  if (!config) return null;
 
   if (loading) {
     return (
@@ -44,7 +45,7 @@ export default function Quiz({ amount, categoryId, difficulty, onFinished, onQui
     );
   }
 
-  if (error || questions.length === 0) {
+  if (error || !questions || questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center">
@@ -53,13 +54,13 @@ export default function Quiz({ amount, categoryId, difficulty, onFinished, onQui
             <p className="text-slate-600 dark:text-slate-400 mb-8">{error || "No questions available for the selected criteria."}</p>
             <div className="flex gap-4 w-full">
               <button 
-                onClick={onQuit}
+                onClick={() => navigate('/')}
                 className="flex-1 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 Go Back
               </button>
               <button 
-                onClick={handleRetry}
+                onClick={retry}
                 className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/30"
               >
                 <RefreshCw size={18} /> Retry
@@ -103,13 +104,14 @@ export default function Quiz({ amount, categoryId, difficulty, onFinished, onQui
         setIsAnswered(false);
       } else {
         // Quiz finished
-        onFinished({
+        setQuizResult({
           score: score + (isCorrect ? 1 : 0),
           total: questions.length,
           answers: [...userAnswers, answerRecord],
-          category: currentQuestion.category || "Mixed", // Use last question's category or mapping
-          difficulty: difficulty || "Mixed"
+          category: currentQuestion.category || "Mixed",
+          difficulty: config.difficulty || "Mixed"
         });
+        navigate('/result');
       }
     }, 1500);
   };
@@ -118,7 +120,11 @@ export default function Quiz({ amount, categoryId, difficulty, onFinished, onQui
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl flex justify-between items-center mb-4 px-2">
          <button 
-           onClick={onQuit}
+           onClick={() => {
+             if (window.confirm("Are you sure you want to quit? Your progress will be lost.")) {
+               navigate('/');
+             }
+           }}
            className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center gap-2 transition-colors font-medium bg-white/50 dark:bg-slate-800/50 px-4 py-2 rounded-lg"
          >
            <XCircle size={18} /> Quit
@@ -136,7 +142,6 @@ export default function Quiz({ amount, categoryId, difficulty, onFinished, onQui
           <span className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full capitalize">{currentQuestion.difficulty}</span>
         </div>
 
-        {/* QuestionCard inline or separate - inline to avoid prop drilling issues during migration */}
         <div className="mb-8">
           <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
              {currentQuestion.question}

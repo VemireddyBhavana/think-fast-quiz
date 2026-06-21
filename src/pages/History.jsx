@@ -1,112 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { getHistory } from '../storage/localStore';
-import { ArrowLeft, Search, Filter } from 'lucide-react';
-import { CATEGORIES, DIFFICULTIES } from '../utils/constants';
+import React, { useState, useEffect } from 'react';
+import { getHistory } from '../services/analyticsService';
+import { ArrowLeft, Search, Filter, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export default function History({ onGoHome }) {
+export default function History() {
   const [history, setHistory] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [search, setSearch] = useState('');
-  const [filterDiff, setFilterDiff] = useState('all');
+  const [filteredHistory, setFilteredHistory] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
 
   useEffect(() => {
-    const data = getHistory();
-    setHistory(data);
-    setFiltered(data);
+    const fetchHistory = async () => {
+      const data = await getHistory();
+      setHistory(data);
+      setFilteredHistory(data);
+    };
+    fetchHistory();
   }, []);
 
   useEffect(() => {
     let result = history;
-    if (search) {
-      result = result.filter(h => h.category.toLowerCase().includes(search.toLowerCase()));
+    if (searchTerm) {
+      result = result.filter(item => 
+        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.difficulty.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-    if (filterDiff !== 'all') {
-      result = result.filter(h => h.difficulty.toLowerCase() === filterDiff.toLowerCase());
+    if (filterCategory) {
+      result = result.filter(item => item.category === filterCategory);
     }
-    setFiltered(result);
-  }, [search, filterDiff, history]);
+    setFilteredHistory(result);
+  }, [searchTerm, filterCategory, history]);
+
+  const categories = [...new Set(history.map(item => item.category))];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 transform animate-in fade-in zoom-in-95 h-[80vh] flex flex-col">
-        
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <button 
-            onClick={onGoHome}
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back to Home</span>
-          </button>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Quiz History
-          </h1>
-        </div>
+    <div className="min-h-screen py-12 px-4 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 transition-colors bg-white dark:bg-slate-800 px-4 py-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </Link>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Quiz History</h1>
+      </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+        
+        {/* Search & Filter Bar */}
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4 bg-slate-50 dark:bg-slate-800/50">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <input 
-              type="text"
-              placeholder="Search by category..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              type="text" 
+              placeholder="Search category or difficulty..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
-          <div className="relative w-full sm:w-48">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <div className="relative w-full md:w-64">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <select 
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
-              value={filterDiff}
-              onChange={(e) => setFilterDiff(e.target.value)}
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
             >
-              <option value="all">All Difficulties</option>
-              {DIFFICULTIES.map(d => (
-                <option key={d.id} value={d.id}>{d.name}</option>
+              <option value="">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
-          {filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
-              No history found.
+        {/* History List */}
+        <div className="p-6">
+          {filteredHistory.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+              <HistoryIcon size={48} className="mx-auto mb-4 opacity-50" />
+              <p className="text-lg">No quiz history found.</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-10">
-                <tr>
-                  <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Date</th>
-                  <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Category</th>
-                  <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Difficulty</th>
-                  <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-right">Score</th>
-                  <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-right">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((item, index) => (
-                  <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
-                      {new Date(item.date).toLocaleDateString()}
-                    </td>
-                    <td className="p-4 text-sm font-medium text-slate-800 dark:text-slate-200">
-                      {item.category}
-                    </td>
-                    <td className="p-4 text-sm text-slate-600 dark:text-slate-400 capitalize">
-                      {item.difficulty}
-                    </td>
-                    <td className="p-4 text-sm font-bold text-slate-800 dark:text-slate-200 text-right">
-                      {item.score} / {item.total}
-                    </td>
-                    <td className="p-4 text-sm font-medium text-right text-emerald-600 dark:text-emerald-400">
-                      {item.percentage}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="space-y-4">
+              {filteredHistory.map((item, idx) => (
+                <div key={item._id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 bg-slate-50 dark:bg-slate-800/30 transition-colors group">
+                  
+                  <div className="mb-4 sm:mb-0">
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{item.category}</h3>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                      <span className="capitalize px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-md font-medium text-slate-700 dark:text-slate-300">
+                        {item.difficulty}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        {new Date(item.date).toLocaleDateString()} {new Date(item.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6 sm:text-right">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Score</p>
+                      <p className="text-2xl font-black text-slate-800 dark:text-white">{item.score}<span className="text-sm text-slate-400 font-medium">/{item.totalQuestions}</span></p>
+                    </div>
+                    <div className="w-px h-10 bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Accuracy</p>
+                      <p className={`text-2xl font-black ${item.percentage >= 80 ? 'text-emerald-500' : item.percentage >= 50 ? 'text-blue-500' : 'text-rose-500'}`}>
+                        {item.percentage}%
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
@@ -114,3 +122,6 @@ export default function History({ onGoHome }) {
     </div>
   );
 }
+
+// Ensure lucide icon is available
+import { History as HistoryIcon } from 'lucide-react';

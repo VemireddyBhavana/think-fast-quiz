@@ -1,3 +1,15 @@
+import apiClient from '../api/apiClient';
+
+export const getHistory = async () => {
+  try {
+    const { data } = await apiClient.get('/quiz-attempts');
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch history:", error);
+    return [];
+  }
+};
+
 export const calculateAnalytics = (history) => {
   if (!history || history.length === 0) {
     return {
@@ -28,14 +40,14 @@ export const calculateAnalytics = (history) => {
     if (game.score > bestScore) bestScore = game.score;
     totalScore += game.score;
     totalCorrect += game.score;
-    totalIncorrect += (game.total - game.score);
+    totalIncorrect += (game.totalQuestions - game.score);
 
     // Category stats
     if (!categoryStats[game.category]) {
       categoryStats[game.category] = { correct: 0, total: 0 };
     }
     categoryStats[game.category].correct += game.score;
-    categoryStats[game.category].total += game.total;
+    categoryStats[game.category].total += game.totalQuestions;
   });
 
   const averageScore = Math.round(totalScore / totalQuizzes);

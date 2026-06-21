@@ -1,24 +1,45 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trophy, Home, RotateCcw, CheckCircle2, XCircle, Percent } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
-import { saveQuizToHistory } from '../storage/localStore';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../api/apiClient';
 
-export default function Result({ result, onRestart, onGoHome }) {
-  const { username } = useAppContext();
+export default function Result({ result }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [saved, setSaved] = useState(false);
+
+  // If no result is present (e.g. user refreshed the page), navigate home
+  useEffect(() => {
+    if (!result) navigate('/');
+  }, [result, navigate]);
+
+  if (!result) return null;
+
   const { score, total, answers, category, difficulty } = result;
   const percentage = Math.round((score / total) * 100);
 
-  // Save to history on mount
   useEffect(() => {
-    saveQuizToHistory({
-      date: new Date().toISOString(),
-      category: category,
-      difficulty: difficulty,
-      score: score,
-      total: total,
-      percentage: percentage
-    });
-  }, [category, difficulty, percentage, score, total]);
+    const saveResult = async () => {
+      try {
+        await apiClient.post('/quiz-attempts', {
+          score,
+          percentage,
+          category,
+          difficulty,
+          totalQuestions: total,
+          correctAnswers: score
+        });
+        setSaved(true);
+      } catch (error) {
+        console.error("Failed to save quiz attempt:", error);
+      }
+    };
+
+    if (!saved) {
+      saveResult();
+    }
+  }, [score, percentage, category, difficulty, total, saved]);
 
   let feedbackMsg = "";
   if (percentage === 100) feedbackMsg = "Flawless Victory!";
@@ -39,7 +60,7 @@ export default function Result({ result, onRestart, onGoHome }) {
           </div>
           
           <h2 className="text-3xl font-bold mb-2">{feedbackMsg}</h2>
-          <p className="text-blue-100 text-lg">Great job, {username}!</p>
+          <p className="text-blue-100 text-lg">Great job, {user?.name}!</p>
           
           <div className="mt-8 flex justify-center gap-8">
             <div className="text-center">
@@ -57,16 +78,10 @@ export default function Result({ result, onRestart, onGoHome }) {
         {/* Action Buttons */}
         <div className="p-8 flex gap-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
            <button 
-              onClick={onRestart}
-              className="flex-1 py-4 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold flex items-center justify-center gap-2 hover:border-blue-500 dark:hover:border-blue-400 transition-colors shadow-sm"
-           >
-             <RotateCcw size={20} /> Play Again
-           </button>
-           <button 
-              onClick={onGoHome}
+              onClick={() => navigate('/')}
               className="flex-1 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/30"
            >
-             <Home size={20} /> Back to Home
+             <Home size={20} /> Back to Dashboard
            </button>
         </div>
 

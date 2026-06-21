@@ -1,89 +1,49 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import Home from './pages/Home';
 import Quiz from './pages/Quiz';
 import Result from './pages/Result';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
-
-// Screen constants
-const SCREEN_HOME = 'HOME';
-const SCREEN_QUIZ = 'QUIZ';
-const SCREEN_RESULT = 'RESULT';
-const SCREEN_DASHBOARD = 'DASHBOARD';
-const SCREEN_HISTORY = 'HISTORY';
+import Profile from './pages/Profile';
 
 export default function App() {
-  const [screen, setScreen] = useState(SCREEN_HOME);
-  
-  // Quiz Setup State
-  const [quizConfig, setQuizConfig] = useState({
-    amount: 10,
-    categoryId: '',
-    difficulty: ''
-  });
-  
-  // Quiz Result State
+  const [quizConfig, setQuizConfig] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
 
-  const handleStartQuiz = (amount, categoryId, difficulty) => {
-    setQuizConfig({ amount, categoryId, difficulty });
-    setScreen(SCREEN_QUIZ);
-  };
-
-  const handleQuizFinished = (result) => {
-    setQuizResult(result);
-    setScreen(SCREEN_RESULT);
-  };
-
-  const handleRestartQuiz = () => {
-    // Keep the same config and just go back to QUIZ screen
-    setScreen(SCREEN_QUIZ);
-  };
-
   return (
-    <AppProvider>
-      <div className="min-h-screen transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100">
-        <Toaster position="top-center" />
-        
-        {screen === SCREEN_HOME && (
-          <Home
-            onStartQuiz={handleStartQuiz}
-            onGoDashboard={() => setScreen(SCREEN_DASHBOARD)}
-            onGoHistory={() => setScreen(SCREEN_HISTORY)}
-          />
-        )}
-        
-        {screen === SCREEN_QUIZ && (
-          <Quiz
-            amount={quizConfig.amount}
-            categoryId={quizConfig.categoryId}
-            difficulty={quizConfig.difficulty}
-            onFinished={handleQuizFinished}
-            onQuit={() => setScreen(SCREEN_HOME)}
-          />
-        )}
+    <AuthProvider>
+      <AppProvider>
+        <div className="min-h-screen transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100">
+          <Toaster position="top-center" />
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-        {screen === SCREEN_RESULT && quizResult && (
-          <Result
-            result={quizResult}
-            onRestart={handleRestartQuiz}
-            onGoHome={() => setScreen(SCREEN_HOME)}
-          />
-        )}
-
-        {screen === SCREEN_DASHBOARD && (
-          <Dashboard onGoHome={() => setScreen(SCREEN_HOME)} />
-        )}
-
-        {screen === SCREEN_HISTORY && (
-          <History onGoHome={() => setScreen(SCREEN_HOME)} />
-        )}
-        
-      </div>
-    </AppProvider>
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<Home setQuizConfig={setQuizConfig} />} />
+                <Route path="/quiz" element={<Quiz config={quizConfig} setQuizResult={setQuizResult} />} />
+                <Route path="/result" element={<Result result={quizResult} />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/profile" element={<Profile />} />
+              </Route>
+              
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </div>
+      </AppProvider>
+    </AuthProvider>
   );
 }

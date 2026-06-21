@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getTheme, setTheme as setStorageTheme, getUsername, setUsername as setStorageUsername } from '../storage/localStore';
+import { getTheme, setTheme as setStorageTheme } from '../storage/localStore';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [theme, setTheme] = useState(getTheme());
-  const [username, setUsername] = useState(getUsername());
 
   useEffect(() => {
     const root = document.documentElement;
@@ -23,13 +22,8 @@ export const AppProvider = ({ children }) => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const handleSetUsername = (name) => {
-    setUsername(name);
-    setStorageUsername(name);
-  };
-
   return (
-    <AppContext.Provider value={{ theme, toggleTheme, username, setUsername: handleSetUsername }}>
+    <AppContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </AppContext.Provider>
   );
