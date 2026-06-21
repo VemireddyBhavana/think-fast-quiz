@@ -1,5 +1,37 @@
-// Open Trivia DB API URL
+import { getToken, setToken, clearToken } from '../storage/localStore';
+
+// Open Trivia DB API URLs
 const BASE_URL = 'https://opentdb.com/api.php';
+const TOKEN_URL = 'https://opentdb.com/api_token.php';
+
+export const fetchSessionToken = async () => {
+  try {
+    const response = await fetch(`${TOKEN_URL}?command=request`);
+    const data = await response.json();
+    if (data.response_code === 0) {
+      setToken(data.token);
+      return data.token;
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to fetch session token", error);
+    return null;
+  }
+};
+
+export const resetSessionToken = async (token) => {
+  try {
+    const response = await fetch(`${TOKEN_URL}?command=reset&token=${token}`);
+    const data = await response.json();
+    if (data.response_code === 0) {
+      return data.token;
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to reset session token", error);
+    return null;
+  }
+};
 
 /**
  * Fetches questions from OpenTDB
@@ -8,7 +40,12 @@ const BASE_URL = 'https://opentdb.com/api.php';
  * @param {string} difficulty 
  * @returns {Promise<Array>} List of questions
  */
-export const fetchQuestions = async (amount = 10, categoryId = null, difficulty = null) => {
+export const fetchQuestions = async (amount = 10, categoryId = null, difficulty = null, retryCount = 0) => {
+  let token = getToken();
+  if (!token && retryCount === 0) {
+    token = await fetchSessionToken();
+  }
+
   let url = `${BASE_URL}?amount=${amount}&type=multiple`;
   
   if (categoryId) {
@@ -19,6 +56,10 @@ export const fetchQuestions = async (amount = 10, categoryId = null, difficulty 
     url += `&difficulty=${difficulty}`;
   }
 
+  if (token) {
+    url += `&token=${token}`;
+  }
+
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -26,12 +67,24 @@ export const fetchQuestions = async (amount = 10, categoryId = null, difficulty 
     }
     const data = await response.json();
     
+    // Handle Session Token Expiration or Exhaustion
+    if ((data.response_code === 3 || data.response_code === 4) && retryCount < 1) {
+      if (data.response_code === 4) {
+        // Token Empty: The user has exhausted all possible questions for this criteria
+        // We must reset the token
+        await resetSessionToken(token);
+      } else {
+        // Token Not Found: It may have expired due to 6 hours of inactivity
+        await fetchSessionToken();
+      }
+      // Retry the fetch once with the fresh/reset token state
+      return await fetchQuestions(amount, categoryId, difficulty, retryCount + 1);
+    }
+    
     // OpenTDB Error Codes
     // 0 = Success
     // 1 = No Results
     // 2 = Invalid Parameter
-    // 3 = Token Not Found
-    // 4 = Token Empty
     // 5 = Rate Limit
     if (data.response_code !== 0) {
       if (data.response_code === 1) {

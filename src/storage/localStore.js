@@ -1,6 +1,11 @@
 const HISTORY_KEY = 'thinkfast_history';
 const USERNAME_KEY = 'thinkfast_user';
 const THEME_KEY = 'thinkfast_theme';
+const TOKEN_KEY = 'thinkfast_api_token';
+
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
+export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 export const getHistory = () => {
   const data = localStorage.getItem(HISTORY_KEY);
