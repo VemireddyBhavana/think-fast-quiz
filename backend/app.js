@@ -30,6 +30,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 import friendRoutes from './routes/friendRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -39,6 +40,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/friends', friendRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error Handling
 app.use(notFound);

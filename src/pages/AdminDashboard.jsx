@@ -182,10 +182,63 @@ export default function AdminDashboard() {
             )}
 
             {activeTab === 'questions' && (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-8 text-center text-slate-500">
-                <HelpCircle className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Question Management</h3>
-                <p>Use this interface to add, edit, and approve questions for the custom DB. (UI for CRUD operations would go here).</p>
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-8 text-white">
+                  <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><HelpCircle /> AI Quiz Builder</h3>
+                  <p className="text-indigo-100 mb-6">Generate custom quiz questions instantly using OpenAI.</p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <input 
+                      type="text" 
+                      id="ai-topic"
+                      placeholder="Enter a topic (e.g. 'JavaScript Basics', 'World War II')"
+                      className="flex-1 px-4 py-3 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-purple-300"
+                    />
+                    <select id="ai-difficulty" className="px-4 py-3 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-purple-300">
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                    <button 
+                      onClick={async () => {
+                        const topic = document.getElementById('ai-topic').value;
+                        const difficulty = document.getElementById('ai-difficulty').value;
+                        if (!topic) return toast.error('Please enter a topic');
+                        
+                        toast.loading('Generating with AI...', { id: 'ai-gen' });
+                        try {
+                          const { data } = await apiClient.post('/ai/generate', { topic, difficulty, amount: 5 });
+                          setQuestions([...data, ...questions]);
+                          toast.success('Questions generated!', { id: 'ai-gen' });
+                        } catch (err) {
+                          toast.error('Failed to generate questions', { id: 'ai-gen' });
+                        }
+                      }}
+                      className="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6">
+                   <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Generated Questions Database</h3>
+                   {questions.length === 0 ? (
+                     <p className="text-slate-500">No generated questions yet.</p>
+                   ) : (
+                     <div className="space-y-4">
+                       {questions.map((q, idx) => (
+                         <div key={idx} className="p-4 border border-slate-200 dark:border-slate-700 rounded-xl">
+                           <p className="font-bold text-slate-800 dark:text-white mb-2">{q.question}</p>
+                           <div className="text-sm">
+                             <p className="text-emerald-600 dark:text-emerald-400 font-semibold mb-1">Correct: {q.correct_answer}</p>
+                             <p className="text-rose-500 dark:text-rose-400">Incorrect: {q.incorrect_answers?.join(', ')}</p>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   )}
+                </div>
               </div>
             )}
           </div>
