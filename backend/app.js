@@ -29,6 +29,8 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+import friendRoutes from './routes/friendRoutes.js';
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quiz-attempts', quizRoutes);
@@ -36,6 +38,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Error Handling
 app.use(notFound);

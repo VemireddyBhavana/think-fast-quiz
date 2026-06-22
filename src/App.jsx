@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
@@ -16,6 +17,7 @@ import History from './pages/History';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import AdminDashboard from './pages/AdminDashboard';
+import Friends from './pages/Friends';
 
 export default function App() {
   const [quizConfig, setQuizConfig] = useState(null);
@@ -24,29 +26,32 @@ export default function App() {
   return (
     <AuthProvider>
       <AppProvider>
-        <div className="min-h-screen transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100">
-          <Toaster position="top-center" />
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+        <SocketProvider>
+          <div className="min-h-screen transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100">
+            <Toaster position="top-center" />
+            <Router>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Home setQuizConfig={setQuizConfig} />} />
-                <Route path="/quiz" element={<Quiz config={quizConfig} setQuizResult={setQuizResult} />} />
-                <Route path="/result" element={<Result result={quizResult} />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-              </Route>
-              
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Router>
-        </div>
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/" element={<Home setQuizConfig={setQuizConfig} />} />
+                  <Route path="/quiz" element={<Quiz config={quizConfig} setQuizResult={setQuizResult} />} />
+                  <Route path="/result" element={<Result result={quizResult} />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/history" element={<History />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/friends" element={<Friends />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
+                
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Router>
+          </div>
+        </SocketProvider>
       </AppProvider>
     </AuthProvider>
   );
