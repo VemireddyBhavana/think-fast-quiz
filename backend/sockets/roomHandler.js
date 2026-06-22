@@ -74,14 +74,47 @@ export const registerRoomHandlers = (io, socket) => {
   });
 
   // Start Quiz
-  socket.on('startQuiz', (roomId, callback) => {
+  socket.on('startQuiz', ({ roomId, questions }, callback) => {
     const roomState = activeRooms.get(roomId);
     if (roomState && roomState.host.socketId === socket.id) {
       roomState.status = 'in-progress';
+      roomState.questions = questions;
+      roomState.currentQuestionIndex = 0;
+      roomState.answersCount = 0;
+      
       io.to(roomId).emit('quizStarted', roomState);
       if (callback) callback({ success: true });
     } else {
       if (callback) callback({ success: false, message: 'Only host can start quiz' });
+    }
+  });
+
+  // Submit Answer
+  socket.on('submitAnswer', ({ roomId, userId, scoreDelta }) => {
+    const roomState = activeRooms.get(roomId);
+    if (roomState && roomState.status === 'in-progress') {
+      const participant = roomState.participants.find(p => p._id === userId);
+      if (participant) {
+        participant.score += scoreDelta;
+        roomState.answersCount += 1;
+        
+        io.to(roomId).emit('roomUpdated', roomState);
+        
+        // If everyone answered, proceed to next question after 3 seconds
+        if (roomState.answersCount >= roomState.participants.length) {
+          roomState.answersCount = 0;
+          roomState.currentQuestionIndex += 1;
+          
+          setTimeout(() => {
+            if (roomState.currentQuestionIndex < roomState.questions.length) {
+              io.to(roomId).emit('nextQuestion', roomState);
+            } else {
+              roomState.status = 'finished';
+              io.to(roomId).emit('quizFinished', roomState);
+            }
+          }, 3000);
+        }
+      }
     }
   });
 

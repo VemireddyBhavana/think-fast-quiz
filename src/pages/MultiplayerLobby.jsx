@@ -19,7 +19,7 @@ export default function MultiplayerLobby() {
     }
     
     setIsCreating(true);
-    socket.emit('createRoom', { user, config: { category: 'Any', difficulty: 'Any', amount: 10 } }, (response) => {
+    socket.emit('createRoom', { user, config: { categoryId: '', difficulty: '', amount: 10 } }, (response) => {
       setIsCreating(false);
       if (response.success) {
         navigate(`/multiplayer/${response.roomId}`);
