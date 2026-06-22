@@ -21,10 +21,14 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+export const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: `Not authorized. Requires one of roles: ${roles.join(', ')}` });
+    }
     next();
-  } else {
-    res.status(403).json({ message: 'Not authorized as an admin' });
-  }
+  };
 };
+
+export const admin = authorizeRoles('admin');
+export const teacherOrAdmin = authorizeRoles('admin', 'teacher');

@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, admin } from '../middleware/auth.js';
+import { protect, admin, teacherOrAdmin } from '../middleware/auth.js';
 import { 
   getUsers, 
   updateUserRole, 
@@ -12,19 +12,22 @@ import {
 
 const router = express.Router();
 
-// All routes are protected and require admin
-router.use(protect, admin);
+router.use(protect);
 
-router.route('/users').get(getUsers);
-router.route('/users/:id/role').put(updateUserRole);
-router.route('/analytics').get(getAnalytics);
+router.route('/users')
+  .get(admin, getUsers);
+router.route('/users/:id/role')
+  .put(admin, updateUserRole);
+
+router.route('/analytics')
+  .get(teacherOrAdmin, getAnalytics);
 
 router.route('/questions')
-  .get(getQuestions)
-  .post(addQuestion);
+  .get(teacherOrAdmin, getQuestions)
+  .post(teacherOrAdmin, addQuestion);
 
 router.route('/questions/:id')
-  .put(updateQuestion)
-  .delete(deleteQuestion);
+  .put(teacherOrAdmin, updateQuestion)
+  .delete(teacherOrAdmin, deleteQuestion);
 
 export default router;
