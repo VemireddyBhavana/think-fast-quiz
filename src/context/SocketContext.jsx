@@ -19,10 +19,8 @@ export const SocketProvider = ({ children }) => {
     }
 
     const socketInstance = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
-      transports: ['websocket', 'polling'],
-      autoConnect: true,
       auth: {
-        token: localStorage.getItem('token') // Pass token if needed for auth
+        token: localStorage.getItem('token')
       }
     });
 
