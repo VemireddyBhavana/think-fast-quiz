@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Brain, BarChart3, History as HistoryIcon, Moon, Sun, User, Trophy } from 'lucide-react';
+import { Play, Brain, BarChart3, History as HistoryIcon, Moon, Sun, User, Trophy, Users } from 'lucide-react';
 import { CATEGORIES, DIFFICULTIES, AMOUNTS } from '../utils/constants';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -26,19 +26,22 @@ export default function Home({ setQuizConfig }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="absolute top-6 right-6 flex gap-4">
-        <Link to="/history" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        <Link to="/multiplayer" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors" title="Multiplayer">
+          <Users size={24} />
+        </Link>
+        <Link to="/history" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="History">
           <HistoryIcon size={24} />
         </Link>
-        <Link to="/dashboard" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+        <Link to="/dashboard" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Dashboard">
           <BarChart3 size={24} />
         </Link>
-        <Link to="/leaderboard" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors">
+        <Link to="/leaderboard" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors" title="Leaderboard">
           <Trophy size={24} />
         </Link>
-        <Link to="/profile" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+        <Link to="/profile" className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" title="Profile">
           <User size={24} />
         </Link>
-        <button onClick={toggleTheme} className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors">
+        <button onClick={toggleTheme} className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-600 dark:text-slate-300 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors" title="Toggle Theme">
           {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
         </button>
       </div>

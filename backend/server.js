@@ -21,9 +21,13 @@ const io = new Server(server, {
   }
 });
 
+import { registerRoomHandlers } from './sockets/roomHandler.js';
+
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
   
+  registerRoomHandlers(io, socket);
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
