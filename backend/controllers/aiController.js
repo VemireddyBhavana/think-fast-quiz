@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY || 'dummy_key_to_prevent_startup_crash'
 });
 
 export const generateQuiz = async (req, res) => {
