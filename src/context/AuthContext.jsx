@@ -69,8 +69,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const { data } = await apiClient.get('/auth/profile');
+      // Keep the token from the current user object
+      const updatedUser = { ...data, token: user?.token };
+      setUser(updatedUser);
+      return true;
+    } catch (error) {
+      console.error('Failed to refresh user data', error);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

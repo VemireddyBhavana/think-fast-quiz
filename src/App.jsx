@@ -14,6 +14,8 @@ import Result from './pages/Result';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
   const [quizConfig, setQuizConfig] = useState(null);
@@ -37,6 +39,8 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
               </Route>
               
               <Route path="*" element={<Navigate to="/" replace />} />

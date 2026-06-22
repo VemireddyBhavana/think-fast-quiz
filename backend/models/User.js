@@ -29,7 +29,43 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  }
+  },
+  xp: {
+    type: Number,
+    default: 0
+  },
+  level: {
+    type: Number,
+    default: 1
+  },
+  bestScore: {
+    type: Number,
+    default: 0
+  },
+  totalQuizzesCompleted: {
+    type: Number,
+    default: 0
+  },
+  totalQuestionsAnswered: {
+    type: Number,
+    default: 0
+  },
+  correctAnswers: {
+    type: Number,
+    default: 0
+  },
+  streak: {
+    current: { type: Number, default: 0 },
+    longest: { type: Number, default: 0 },
+    lastActive: { type: Date, default: null }
+  },
+  badges: [{
+    type: String
+  }],
+  achievements: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Achievement'
+  }]
 }, {
   timestamps: true
 });

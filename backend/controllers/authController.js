@@ -17,6 +17,13 @@ export const registerUser = async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        xp: user.xp,
+        level: user.level,
+        bestScore: user.bestScore,
+        streak: user.streak,
+        totalQuizzesCompleted: user.totalQuizzesCompleted,
+        badges: user.badges,
+        achievements: user.achievements,
         token: generateToken(user._id)
       });
     } else {
@@ -40,6 +47,13 @@ export const loginUser = async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        xp: user.xp,
+        level: user.level,
+        bestScore: user.bestScore,
+        streak: user.streak,
+        totalQuizzesCompleted: user.totalQuizzesCompleted,
+        badges: user.badges,
+        achievements: user.achievements,
         token: generateToken(user._id)
       });
     } else {
@@ -62,7 +76,14 @@ export const getUserProfile = async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         role: user.role,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        xp: user.xp,
+        level: user.level,
+        bestScore: user.bestScore,
+        streak: user.streak,
+        totalQuizzesCompleted: user.totalQuizzesCompleted,
+        badges: user.badges,
+        achievements: user.achievements
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -93,6 +114,13 @@ export const updateUserProfile = async (req, res) => {
         email: updatedUser.email,
         avatar: updatedUser.avatar,
         role: updatedUser.role,
+        xp: updatedUser.xp,
+        level: updatedUser.level,
+        bestScore: updatedUser.bestScore,
+        streak: updatedUser.streak,
+        totalQuizzesCompleted: updatedUser.totalQuizzesCompleted,
+        badges: updatedUser.badges,
+        achievements: updatedUser.achievements,
         token: generateToken(updatedUser._id)
       });
     } else {

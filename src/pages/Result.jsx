@@ -3,11 +3,13 @@ import { Trophy, Home, RotateCcw, CheckCircle2, XCircle, Percent } from 'lucide-
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
+import CertificateView from '../components/CertificateView';
 
 export default function Result({ result }) {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
+  const [certificate, setCertificate] = useState(null);
 
   // If no result is present (e.g. user refreshed the page), navigate home
   useEffect(() => {
@@ -30,16 +32,31 @@ export default function Result({ result }) {
           totalQuestions: total,
           correctAnswers: score
         });
+        
+        // Refresh user to get updated XP, Level, and Streaks
+        if (refreshUser) {
+          await refreshUser();
+        }
+
+        // Generate certificate if passing score (e.g., >= 70%)
+        if (percentage >= 70) {
+          const certRes = await apiClient.post('/certificates', {
+            quizCategory: category || 'General Knowledge',
+            score: percentage
+          });
+          setCertificate(certRes.data);
+        }
+
         setSaved(true);
       } catch (error) {
-        console.error("Failed to save quiz attempt:", error);
+        console.error("Failed to save quiz attempt or generate certificate:", error);
       }
     };
 
     if (!saved) {
       saveResult();
     }
-  }, [score, percentage, category, difficulty, total, saved]);
+  }, [score, percentage, category, difficulty, total, saved, refreshUser]);
 
   let feedbackMsg = "";
   if (percentage === 100) feedbackMsg = "Flawless Victory!";
@@ -108,6 +125,15 @@ export default function Result({ result }) {
             ))}
           </div>
         </div>
+
+        {/* Certificate Section */}
+        {certificate && (
+          <div className="p-8 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col items-center">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2 text-center">You Earned a Certificate!</h3>
+            <p className="text-slate-500 mb-6 text-center">Congratulations on passing with a high score.</p>
+            <CertificateView certificate={certificate} user={user} />
+          </div>
+        )}
 
       </div>
     </div>
