@@ -7,10 +7,25 @@ import connectDB from './config/db.js';
 import http from 'http';
 import { Server } from 'socket.io';
 
+import path from 'path';
+import express from 'express';
+
+const PORT = process.env.PORT || 5000;
+
 // Connect to database
 connectDB();
 
-const PORT = process.env.PORT || 5000;
+// Serve frontend in production (for Docker)
+if (process.env.NODE_ENV === 'production') {
+  const __dirname = path.resolve();
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.get('*', (req, res) => {
+    // Only serve index.html for non-API routes
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+    }
+  });
+}
 
 const server = http.createServer(app);
 
