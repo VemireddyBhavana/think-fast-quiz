@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import { Skeleton } from '../components/ui/Skeleton';
 import ProgressBar from '../components/ProgressBar';
-import { AlertCircle, RefreshCw, XCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw, XCircle, Timer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ export default function Quiz({ config, setQuizResult }) {
   
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +22,21 @@ export default function Quiz({ config, setQuizResult }) {
       navigate('/');
     }
   }, [config, navigate]);
+
+  useEffect(() => {
+    if (loading || error || !questions || questions.length === 0 || isAnswered) return;
+
+    if (timeLeft === 0) {
+      handleAnswer(null); // time's up
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, isAnswered, loading, error, questions]);
 
   if (!config) return null;
 
@@ -79,17 +95,21 @@ export default function Quiz({ config, setQuizResult }) {
     setSelectedOption(option);
     setIsAnswered(true);
 
-    const isCorrect = option === currentQuestion.correct_answer;
+    const isCorrect = option !== null && option === currentQuestion.correct_answer;
     if (isCorrect) {
       setScore(prev => prev + 1);
       toast.success("Correct!", { icon: '🔥', duration: 1000 });
     } else {
-      toast.error("Incorrect!", { icon: '❌', duration: 1000 });
+      if (option === null) {
+        toast.error("Time's up!", { icon: '⏰', duration: 1000 });
+      } else {
+        toast.error("Incorrect!", { icon: '❌', duration: 1000 });
+      }
     }
 
     const answerRecord = {
       question: currentQuestion.question,
-      selected: option,
+      selected: option || "Time's up",
       correct: currentQuestion.correct_answer,
       isCorrect
     };
@@ -102,6 +122,7 @@ export default function Quiz({ config, setQuizResult }) {
         setCurrentIndex(prev => prev + 1);
         setSelectedOption(null);
         setIsAnswered(false);
+        setTimeLeft(15);
       } else {
         // Quiz finished
         setQuizResult({
@@ -129,8 +150,13 @@ export default function Quiz({ config, setQuizResult }) {
          >
            <XCircle size={18} /> Quit
          </button>
-         <div className="px-4 py-2 bg-white/50 dark:bg-slate-800/50 rounded-lg text-sm font-bold text-blue-600 dark:text-blue-400">
-           Score: {score}
+         <div className="flex gap-3">
+           <div className={`px-4 py-2 bg-white/50 dark:bg-slate-800/50 rounded-lg text-sm font-bold flex items-center gap-1.5 transition-colors ${timeLeft <= 5 ? 'text-rose-600 dark:text-rose-400 animate-pulse' : 'text-slate-600 dark:text-slate-300'}`}>
+             <Timer size={16} /> 00:{timeLeft.toString().padStart(2, '0')}
+           </div>
+           <div className="px-4 py-2 bg-white/50 dark:bg-slate-800/50 rounded-lg text-sm font-bold text-blue-600 dark:text-blue-400">
+             Score: {score}
+           </div>
          </div>
       </div>
       
