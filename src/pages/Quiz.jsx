@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import { Skeleton } from '../components/ui/Skeleton';
 import ProgressBar from '../components/ProgressBar';
-import { AlertCircle, RefreshCw, XCircle, Timer } from 'lucide-react';
+import { AlertCircle, RefreshCw, XCircle, Timer, Volume2, VolumeX } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,8 @@ export default function Quiz({ config, setQuizResult }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
+  
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -89,8 +91,24 @@ export default function Quiz({ config, setQuizResult }) {
 
   const currentQuestion = questions[currentIndex];
 
+  useEffect(() => {
+    if (voiceEnabled && currentQuestion && !isAnswered && !loading && !error) {
+      window.speechSynthesis.cancel(); // Stop previous
+      const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [currentIndex, voiceEnabled, loading, error, isAnswered, currentQuestion]);
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
   const handleAnswer = (option) => {
     if (isAnswered) return;
+    window.speechSynthesis.cancel();
 
     setSelectedOption(option);
     setIsAnswered(true);
@@ -157,6 +175,13 @@ export default function Quiz({ config, setQuizResult }) {
            <div className="px-4 py-2 bg-white/50 dark:bg-slate-800/50 rounded-lg text-sm font-bold text-blue-600 dark:text-blue-400">
              Score: {score}
            </div>
+           <button
+             onClick={() => setVoiceEnabled(!voiceEnabled)}
+             className="p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
+             title={voiceEnabled ? "Disable Voice" : "Enable Voice"}
+           >
+             {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+           </button>
          </div>
       </div>
       

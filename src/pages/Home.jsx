@@ -109,6 +109,19 @@ export default function Home({ setQuizConfig }) {
             <Play size={24} fill="currentColor" />
             <span>Start Quiz</span>
           </button>
+
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+             <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer" onClick={() => navigate('/challenge')}>
+                <div className="absolute right-0 top-0 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform duration-500">
+                   <Trophy size={100} />
+                </div>
+                <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><Trophy size={20} /> Daily Challenge</h3>
+                <p className="text-emerald-50 text-sm mb-4">Complete today's challenge to earn the "Early Bird" badge!</p>
+                <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg font-semibold text-sm hover:bg-white/30 transition-colors">
+                   Play Now →
+                </div>
+             </div>
+          </div>
         </div>
       </div>
     </div>

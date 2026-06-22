@@ -18,6 +18,7 @@ import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Friends from './pages/Friends';
+import DailyChallenge from './pages/DailyChallenge';
 
 import MultiplayerLobby from './pages/MultiplayerLobby';
 import MultiplayerRoom from './pages/MultiplayerRoom';
@@ -47,6 +48,7 @@ export default function App() {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/friends" element={<Friends />} />
+                  <Route path="/challenge" element={<DailyChallenge />} />
                   <Route path="/multiplayer" element={<MultiplayerLobby />} />
                   <Route path="/multiplayer/:roomId" element={<MultiplayerRoom />} />
                   <Route path="/admin" element={<AdminDashboard />} />
