@@ -8,13 +8,15 @@ export const useQuiz = (config) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchQuizData = useCallback(async () => {
+  const fetchQuizData = useCallback(async (isMounted = { current: true }) => {
     if (!config) return;
     setLoading(true);
     setError(null);
     try {
       const rawQuestions = await fetchQuestions(config.amount, config.category, config.difficulty);
       
+      if (!isMounted.current) return;
+
       const formattedQuestions = rawQuestions.map((q) => {
         const decodedQuestion = decodeHTMLEntities(q.question);
         const decodedCorrect = decodeHTMLEntities(q.correct_answer);
@@ -34,16 +36,26 @@ export const useQuiz = (config) => {
 
       setQuestions(formattedQuestions);
     } catch (err) {
+      if (!isMounted.current) return;
       setError(err.message);
       toast.error(err.message || 'Failed to fetch questions');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, [config]);
 
   useEffect(() => {
-    fetchQuizData();
+    const isMounted = { current: true };
+    // Add a small debounce to prevent double-fetch in React Strict Mode
+    const timeoutId = setTimeout(() => {
+      fetchQuizData(isMounted);
+    }, 100);
+
+    return () => {
+      isMounted.current = false;
+      clearTimeout(timeoutId);
+    };
   }, [fetchQuizData]);
 
-  return { questions, loading, error, retry: fetchQuizData };
+  return { questions, loading, error, retry: () => fetchQuizData({ current: true }) };
 };
