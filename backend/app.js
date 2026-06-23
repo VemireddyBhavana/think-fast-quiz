@@ -16,7 +16,20 @@ import challengeRoutes from './routes/challengeRoutes.js';
 const app = express();
 
 // Middleware (Must be first for Preflight requests)
-app.use(cors());
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [process.env.CLIENT_URL || 'https://thinkfastquiz.vercel.app'] 
+  : ['http://localhost:5173'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Security Middleware
