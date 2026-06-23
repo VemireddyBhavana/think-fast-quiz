@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, User, Mail, Save, LogOut, Star, Zap, Award, Target } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -60,6 +60,7 @@ export default function Profile() {
                   updateProfile({ avatar: data.avatar });
                   toast.success('Avatar updated!', { id: 'avatar' });
                 } catch (err) {
+                  console.error(err);
                   toast.error('Failed to upload avatar', { id: 'avatar' });
                 }
               }} />

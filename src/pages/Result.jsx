@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Trophy, Home, RotateCcw, CheckCircle2, XCircle, Percent } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Trophy, Home, CheckCircle2, XCircle, Percent } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
@@ -16,12 +16,11 @@ export default function Result({ result }) {
     if (!result) navigate('/');
   }, [result, navigate]);
 
-  if (!result) return null;
-
-  const { score, total, answers, category, difficulty } = result;
-  const percentage = Math.round((score / total) * 100);
-
   useEffect(() => {
+    if (!result) return;
+    const { score, total, category, difficulty } = result;
+    const percentage = Math.round((score / total) * 100);
+
     const saveResult = async () => {
       try {
         await apiClient.post('/quiz-attempts', {
@@ -33,12 +32,10 @@ export default function Result({ result }) {
           correctAnswers: score
         });
         
-        // Refresh user to get updated XP, Level, and Streaks
         if (refreshUser) {
           await refreshUser();
         }
 
-        // Generate certificate if passing score (e.g., >= 70%)
         if (percentage >= 70) {
           const certRes = await apiClient.post('/certificates', {
             quizCategory: category || 'General Knowledge',
@@ -56,13 +53,17 @@ export default function Result({ result }) {
     if (!saved) {
       saveResult();
     }
-  }, [score, percentage, category, difficulty, total, saved, refreshUser]);
+  }, [result, saved, refreshUser]);
 
-  let feedbackMsg = "";
+  if (!result) return null;
+
+  const { score, total, answers } = result;
+  const percentage = Math.round((score / total) * 100);
+
+  let feedbackMsg = "Keep Practicing!";
   if (percentage === 100) feedbackMsg = "Flawless Victory!";
   else if (percentage >= 80) feedbackMsg = "Outstanding Performance!";
   else if (percentage >= 50) feedbackMsg = "Good Effort!";
-  else feedbackMsg = "Keep Practicing!";
 
   return (
     <div className="min-h-screen py-12 px-4 flex flex-col items-center">

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import { Skeleton } from '../components/ui/Skeleton';
 import ProgressBar from '../components/ProgressBar';
-import { AlertCircle, RefreshCw, XCircle, Timer, Volume2, VolumeX } from 'lucide-react';
+import { AlertCircle, RefreshCw, XCircle, Timer, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,11 +13,63 @@ export default function Quiz({ config, setQuizResult }) {
   const [userAnswers, setUserAnswers] = useState([]);
   
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const navigate = useNavigate();
+
+  const currentQuestion = questions ? questions[currentIndex] : null;
+
+  const handleAnswer = useCallback((option) => {
+    if (isAnswered) return;
+    window.speechSynthesis.cancel();
+
+    setSelectedOption(option);
+    setIsAnswered(true);
+
+    const isCorrect = option !== null && option === currentQuestion?.correct_answer;
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+      toast.success("Correct!", { icon: '🔥', duration: 1000 });
+    } else {
+      if (option === null) {
+        toast.error("Time's up!", { icon: '⏰', duration: 1000 });
+      } else {
+        toast.error("Incorrect!", { icon: '❌', duration: 1000 });
+      }
+    }
+
+    const answerRecord = {
+      question: currentQuestion?.question,
+      selected: option || "Time's up",
+      correct: currentQuestion?.correct_answer,
+      isCorrect
+    };
+
+    setUserAnswers(prev => [...prev, answerRecord]);
+
+    // Delay for UI feedback
+    setTimeout(() => {
+      if (questions && currentIndex + 1 < questions.length) {
+        setCurrentIndex(prev => prev + 1);
+        setSelectedOption(null);
+        setIsAnswered(false);
+        setTimeLeft(15);
+      } else {
+        // Quiz finished
+        setQuizResult({
+          score: score + (isCorrect ? 1 : 0),
+          total: questions?.length || 0,
+          answers: [...userAnswers, answerRecord],
+          category: currentQuestion?.category || "Mixed",
+          difficulty: config?.difficulty || "Mixed"
+        });
+        navigate('/result');
+      }
+    }, 1500);
+  }, [isAnswered, currentQuestion, currentIndex, questions, score, userAnswers, config, setQuizResult, navigate]);
 
   useEffect(() => {
     if (!config) {
@@ -38,7 +90,63 @@ export default function Quiz({ config, setQuizResult }) {
     }, 1000);
 
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, isAnswered, loading, error, questions]);
+
+  useEffect(() => {
+    if (voiceEnabled && currentQuestion && !isAnswered && !loading && !error) {
+      window.speechSynthesis.cancel(); // Stop previous
+      const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [currentIndex, voiceEnabled, loading, error, isAnswered, currentQuestion]);
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition not supported in this browser");
+      return;
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      const matchedOption = currentQuestion?.options.find(opt => 
+         opt.toLowerCase() === transcript || transcript.includes(opt.toLowerCase()) || opt.toLowerCase().includes(transcript)
+      );
+      if (matchedOption) {
+        handleAnswer(matchedOption);
+      } else {
+        toast.error("Couldn't match answer: " + transcript);
+      }
+    };
+    
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error(err);
+      toast.error("Error starting speech recognition");
+    }
+  };
 
   if (!config) return null;
 
@@ -89,72 +197,6 @@ export default function Quiz({ config, setQuizResult }) {
     );
   }
 
-  const currentQuestion = questions[currentIndex];
-
-  useEffect(() => {
-    if (voiceEnabled && currentQuestion && !isAnswered && !loading && !error) {
-      window.speechSynthesis.cancel(); // Stop previous
-      const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [currentIndex, voiceEnabled, loading, error, isAnswered, currentQuestion]);
-
-  useEffect(() => {
-    return () => {
-      window.speechSynthesis.cancel();
-    };
-  }, []);
-
-  const handleAnswer = (option) => {
-    if (isAnswered) return;
-    window.speechSynthesis.cancel();
-
-    setSelectedOption(option);
-    setIsAnswered(true);
-
-    const isCorrect = option !== null && option === currentQuestion.correct_answer;
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-      toast.success("Correct!", { icon: '🔥', duration: 1000 });
-    } else {
-      if (option === null) {
-        toast.error("Time's up!", { icon: '⏰', duration: 1000 });
-      } else {
-        toast.error("Incorrect!", { icon: '❌', duration: 1000 });
-      }
-    }
-
-    const answerRecord = {
-      question: currentQuestion.question,
-      selected: option || "Time's up",
-      correct: currentQuestion.correct_answer,
-      isCorrect
-    };
-
-    setUserAnswers(prev => [...prev, answerRecord]);
-
-    // Delay for UI feedback
-    setTimeout(() => {
-      if (currentIndex + 1 < questions.length) {
-        setCurrentIndex(prev => prev + 1);
-        setSelectedOption(null);
-        setIsAnswered(false);
-        setTimeLeft(15);
-      } else {
-        // Quiz finished
-        setQuizResult({
-          score: score + (isCorrect ? 1 : 0),
-          total: questions.length,
-          answers: [...userAnswers, answerRecord],
-          category: currentQuestion.category || "Mixed",
-          difficulty: config.difficulty || "Mixed"
-        });
-        navigate('/result');
-      }
-    }, 1500);
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl flex justify-between items-center mb-4 px-2">
@@ -181,6 +223,13 @@ export default function Quiz({ config, setQuizResult }) {
              title={voiceEnabled ? "Disable Voice" : "Enable Voice"}
            >
              {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+           </button>
+           <button
+             onClick={toggleListening}
+             className={`p-2 rounded-lg transition-colors ${isListening ? 'bg-rose-500 text-white animate-pulse' : 'bg-white/50 dark:bg-slate-800/50 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'}`}
+             title={isListening ? "Listening..." : "Enable Voice Answer"}
+           >
+             {isListening ? <Mic size={20} /> : <MicOff size={20} />}
            </button>
          </div>
       </div>
