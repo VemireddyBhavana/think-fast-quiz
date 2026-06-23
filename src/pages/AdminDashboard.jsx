@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Shield, Users, HelpCircle, BarChart3, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -118,20 +119,72 @@ export default function AdminDashboard() {
         ) : (
           <div>
             {activeTab === 'analytics' && analytics && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow border border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Users</h3>
-                  <p className="text-4xl font-bold text-slate-800 dark:text-white">{analytics.totalUsers}</p>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Users</h3>
+                    <p className="text-4xl font-bold text-slate-800 dark:text-white">{analytics.totalUsers}</p>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Quizzes</h3>
+                    <p className="text-4xl font-bold text-slate-800 dark:text-white">{analytics.totalQuizzes}</p>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Questions</h3>
+                    <p className="text-4xl font-bold text-slate-800 dark:text-white">{analytics.totalQuestions}</p>
+                  </div>
+                  <div className="bg-gradient-to-tr from-amber-500 to-orange-600 p-6 rounded-2xl shadow text-white">
+                    <h3 className="text-lg font-semibold text-amber-100 mb-2">Pro Subscribers</h3>
+                    <p className="text-4xl font-bold">{analytics.totalProUsers}</p>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                {/* Daily Quizzes Chart */}
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow border border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Quizzes</h3>
-                  <p className="text-4xl font-bold text-slate-800 dark:text-white">{analytics.totalQuizzes}</p>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Quizzes Taken (Last 30 Days)</h3>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={analytics.dailyQuizzes}>
+                        <defs>
+                          <linearGradient id="colorQuizzes" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                        <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickFormatter={(val) => val.substring(5)} />
+                        <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                          itemStyle={{ color: '#818cf8' }}
+                        />
+                        <Area type="monotone" dataKey="quizzes" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorQuizzes)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
+
+                {/* Categories Chart */}
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow border border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Questions</h3>
-                  <p className="text-4xl font-bold text-slate-800 dark:text-white">{analytics.totalQuestions}</p>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Quizzes by Category</h3>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.categoryStats}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                        <XAxis dataKey="_id" stroke="#64748b" fontSize={12} />
+                        <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                          cursor={{ fill: 'rgba(51, 65, 85, 0.2)' }}
+                        />
+                        <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
+              </>
             )}
 
             {activeTab === 'users' && user.role === 'admin' && (

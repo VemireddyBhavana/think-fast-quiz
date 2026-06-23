@@ -30,6 +30,14 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin', 'teacher'],
     default: 'user'
   },
+  isPro: {
+    type: Boolean,
+    default: false,
+  },
+  stripeCustomerId: {
+    type: String,
+    default: null,
+  },
   xp: {
     type: Number,
     default: 0

@@ -22,6 +22,7 @@ import DailyChallenge from './pages/DailyChallenge';
 
 import MultiplayerLobby from './pages/MultiplayerLobby';
 import MultiplayerRoom from './pages/MultiplayerRoom';
+import Premium from './pages/Premium';
 
 export default function App() {
   const [quizConfig, setQuizConfig] = useState(null);
@@ -52,6 +53,7 @@ export default function App() {
                   <Route path="/multiplayer" element={<MultiplayerLobby />} />
                   <Route path="/multiplayer/:roomId" element={<MultiplayerRoom />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/premium" element={<Premium />} />
                 </Route>
                 
                 <Route path="*" element={<Navigate to="/" replace />} />

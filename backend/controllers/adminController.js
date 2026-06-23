@@ -31,6 +31,7 @@ export const updateUserRole = async (req, res) => {
 export const getAnalytics = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
+    const totalProUsers = await User.countDocuments({ isPro: true });
     const totalQuizzes = await QuizAttempt.countDocuments();
     const totalQuestions = await Question.countDocuments();
 
@@ -39,11 +40,28 @@ export const getAnalytics = async (req, res) => {
       { $group: { _id: '$category', count: { $sum: 1 } } }
     ]);
 
+    // Daily quizzes over last 30 days (approximation using createdAt)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const dailyQuizzes = await QuizAttempt.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { 
+        $group: { 
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, 
+          count: { $sum: 1 } 
+        } 
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
     res.json({
       totalUsers,
+      totalProUsers,
       totalQuizzes,
       totalQuestions,
-      categoryStats
+      categoryStats,
+      dailyQuizzes: dailyQuizzes.map(d => ({ date: d._id, quizzes: d.count }))
     });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch analytics', error: error.message });

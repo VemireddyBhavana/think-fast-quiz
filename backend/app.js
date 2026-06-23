@@ -30,7 +30,15 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+import stripeRoutes from './routes/stripeRoutes.js';
+
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/stripe/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // Security Middleware
 app.use(helmet());
@@ -41,6 +49,9 @@ const limiter = rateLimit({
   max: 1000 // limit each IP to 1000 requests per windowMs
 });
 app.use('/api', limiter);
+
+// Register the rest of stripe routes after json parsing
+app.use('/api/stripe', stripeRoutes);
 
 import friendRoutes from './routes/friendRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';

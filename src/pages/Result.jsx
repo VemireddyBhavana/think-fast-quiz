@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import CertificateView from '../components/CertificateView';
+import html2canvas from 'html2canvas';
+import { Share2 } from 'lucide-react';
 
 export default function Result({ result }) {
   const { user, refreshUser } = useAuth();
@@ -65,12 +67,43 @@ export default function Result({ result }) {
   else if (percentage >= 80) feedbackMsg = "Outstanding Performance!";
   else if (percentage >= 50) feedbackMsg = "Good Effort!";
 
+  const handleShare = async (platform) => {
+    try {
+      const element = document.getElementById('score-card');
+      const canvas = await html2canvas(element, { backgroundColor: '#1e293b' });
+      const dataUrl = canvas.toDataURL('image/png');
+      
+      // We can't directly attach images to Twitter/FB intent URLs without a server-side image host.
+      // So we use the native Web Share API if available (works on mobile and some desktops).
+      if (navigator.share) {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'my-score.png', { type: 'image/png' });
+        await navigator.share({
+          title: 'My ThinkFast Quiz Score',
+          text: `I just scored ${percentage}% on ThinkFast Quiz! Can you beat me?`,
+          files: [file]
+        });
+      } else {
+        // Fallback to standard text share intent
+        const text = `I just scored ${percentage}% on ThinkFast Quiz! Can you beat me?`;
+        const url = window.location.origin;
+        if (platform === 'twitter') {
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        } else if (platform === 'facebook') {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+        }
+      }
+    } catch (err) {
+      console.error('Sharing failed', err);
+    }
+  };
+
   return (
     <div className="min-h-screen py-12 px-4 flex flex-col items-center">
       <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 mb-8 animate-in slide-in-from-bottom-8 duration-500">
         
         {/* Header Section */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-10 text-center text-white relative overflow-hidden">
+        <div id="score-card" className="bg-gradient-to-br from-blue-600 to-indigo-700 p-10 text-center text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
           
           <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full mx-auto flex items-center justify-center mb-6 shadow-xl ring-4 ring-white/30">
@@ -94,12 +127,24 @@ export default function Result({ result }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="p-8 flex gap-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+        <div className="p-8 flex flex-col sm:flex-row gap-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
            <button 
               onClick={() => navigate('/')}
               className="flex-1 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/30"
            >
              <Home size={20} /> Back to Dashboard
+           </button>
+           <button 
+              onClick={() => handleShare('twitter')}
+              className="flex-1 py-4 rounded-xl bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-[#1DA1F2]/30"
+           >
+             <Share2 size={20} /> Share Score
+           </button>
+           <button 
+              onClick={() => handleShare('facebook')}
+              className="flex-1 py-4 rounded-xl bg-[#4267B2] hover:bg-[#3b5998] text-white font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-[#4267B2]/30 hidden sm:flex"
+           >
+             <Share2 size={20} /> Share
            </button>
         </div>
 
