@@ -62,6 +62,9 @@ export const fetchQuestions = async (amount = 10, categoryId = null, difficulty 
 
   try {
     const response = await fetch(url);
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait 5 seconds and try again.');
+    }
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }

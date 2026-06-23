@@ -99,8 +99,12 @@ export default function MultiplayerRoom() {
     setTimeLeft(15);
   };
 
+  const [isStarting, setIsStarting] = useState(false);
+
   const handleStartQuiz = async () => {
+    if (isStarting) return;
     try {
+      setIsStarting(true);
       toast.loading("Fetching questions...", { id: 'quiz-fetch' });
       const rawQuestions = await fetchQuestions(roomState.config.amount, roomState.config.categoryId, roomState.config.difficulty);
       
@@ -120,10 +124,12 @@ export default function MultiplayerRoom() {
 
       socket.emit('startQuiz', { roomId, questions: formattedQuestions }, (response) => {
         toast.dismiss('quiz-fetch');
+        setIsStarting(false);
         if (!response.success) toast.error(response.message);
       });
     } catch (err) {
-      toast.error("Failed to fetch questions");
+      setIsStarting(false);
+      toast.error(err.message || "Failed to fetch questions");
       toast.dismiss('quiz-fetch');
     }
   };
@@ -278,9 +284,10 @@ export default function MultiplayerRoom() {
           {isHost && roomState.status === 'waiting' && (
             <button 
               onClick={handleStartQuiz}
-              className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/30 transition-transform hover:scale-105"
+              disabled={isStarting}
+              className={`px-8 py-3 font-bold rounded-xl flex items-center gap-2 shadow-lg transition-transform ${isStarting ? 'bg-emerald-400 cursor-not-allowed opacity-70 text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 hover:scale-105'}`}
             >
-              <Play fill="currentColor" /> Start Quiz
+              <Play fill="currentColor" /> {isStarting ? 'Loading...' : 'Start Quiz'}
             </button>
           )}
         </div>

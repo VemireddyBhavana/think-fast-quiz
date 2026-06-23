@@ -58,6 +58,7 @@ export const registerRoomHandlers = (io, socket) => {
     const roomState = activeRooms.get(roomId);
     
     if (roomState) {
+      const participant = roomState.participants.find(p => p.socketId === socket.id);
       roomState.participants = roomState.participants.filter(p => p.socketId !== socket.id);
       
       // If room empty, delete it
@@ -65,7 +66,7 @@ export const registerRoomHandlers = (io, socket) => {
         activeRooms.delete(roomId);
       } else {
         // If host left, assign new host
-        if (roomState.host.socketId === socket.id) {
+        if (participant && roomState.host._id === participant._id) {
           roomState.host = roomState.participants[0];
         }
         io.to(roomId).emit('roomUpdated', roomState);
@@ -76,7 +77,9 @@ export const registerRoomHandlers = (io, socket) => {
   // Start Quiz
   socket.on('startQuiz', ({ roomId, questions }, callback) => {
     const roomState = activeRooms.get(roomId);
-    if (roomState && roomState.host.socketId === socket.id) {
+    const caller = roomState?.participants.find(p => p.socketId === socket.id);
+    
+    if (roomState && caller && roomState.host._id === caller._id) {
       roomState.status = 'in-progress';
       roomState.questions = questions;
       roomState.currentQuestionIndex = 0;
@@ -142,7 +145,7 @@ export const registerRoomHandlers = (io, socket) => {
         if (roomState.participants.length === 0) {
           activeRooms.delete(roomId);
         } else {
-          if (roomState.host.socketId === socket.id) {
+          if (roomState.host._id === participant._id) {
             roomState.host = roomState.participants[0];
           }
           io.to(roomId).emit('roomUpdated', roomState);
